@@ -152,4 +152,4 @@ def download_public_file(url: str) -> Any:
 # =====================================================================
 if __name__ == "__main__":
     # Initialize and run the server using standard input/output transport
-    mcp.run(transport='sse', sse={'endpoint': '/sse', 'port': 8080})
+    mcp.run(transport='sse')

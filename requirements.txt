@@ -1,5 +1,4 @@
 requests
 pandas
-base64
 typing
 mcp

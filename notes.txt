@@ -1,0 +1,3 @@
+there is limit of number of tokens claude can process
+
+# this system is unable to read write data currently , i am missing something

@@ -3,11 +3,10 @@ services:
     name: mcp-demo
     env: python
     plan: free
-    region: oregon  # Optional: choose a region close to you
+    region: oregon
     buildCommand: pip install -r requirements.txt
     startCommand: python server.py
-    autoDeploy: true  # Set to false if you prefer manual deploys
+    autoDeploy: true
     envVars:
       - key: PORT
-        value: 8000  # Render overrides this with its own port, but setting it ensures local consistency
-    healthCheckPath: /health
+        value: 8000  # Render overrides this

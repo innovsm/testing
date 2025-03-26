@@ -33,7 +33,7 @@ async def mcp_endpoint(request: Request):
         # Read raw JSON request
         body = await request.json()
         tool_name = body.get("tool")
-        tool_args = body.get("args", {})  # Default to empty dict if args missing
+        tool_args = body.get("arguments", {})  # Default to empty dict if args missing
         
         response = await mcp.call_tool(name = tool_name,arguments= tool_args)
        

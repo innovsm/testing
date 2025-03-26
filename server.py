@@ -12,7 +12,7 @@ mcp = FastMCP(
 
 # Define a simple tool
 @mcp.tool(name = "greet")
-def greet(name: str) -> dict:  # Changed return type hint to dict
+def greet(name: str = "anshu") -> dict:  # Changed return type hint to dict
     """Greet a person by name"""
 
     return {"result": f"Hello, {name}! Welcome to my MCP server on Render."}
@@ -32,18 +32,29 @@ async def mcp_endpoint(request: Request):
     try:
         # Read raw JSON request
         body = await request.json()
-        print(body)
+
+        
         # Process the request through FastMCP
-        response = await mcp.call_tool(name = "greet",arguments={"name":"anshu"})
+        response = await mcp.call_tool(name = "greet" , arguments = "")
+       
+        
+        # Convert TextContent to a serializable format
+        if hasattr(response, 'text'):  # Check if it has a 'text' attribute
+            serializable_response = response.text
+        elif isinstance(response, dict):  # Already a dict
+            serializable_response = response
+        else:  # Fallback: convert to string
+            serializable_response = str(response)
+        
        
         
         # Return JSON response
         return Response(
-            content=json.dumps(response),
+            content=json.dumps(serializable_response),
             media_type="application/json"
         )
     except Exception as e:
-      
+       
         return Response(
             content=json.dumps({"error": str(e)}),
             media_type="application/json",

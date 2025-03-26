@@ -31,7 +31,7 @@ async def mcp_endpoint(request: Request):
     try:
         # Read raw JSON request
         body = await request.json()
-        
+        print(body)
         # Process the request through FastMCP
         response = await mcp.call_tool(body)
        

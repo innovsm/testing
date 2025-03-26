@@ -12,9 +12,10 @@ mcp = FastMCP(
 
 # Define a simple tool
 @mcp.tool(name = "greet")
-def greet() -> str:
+def greet(name: str) -> dict:  # Changed return type hint to dict
     """Greet a person by name"""
-    return f"Hello, betichod! Welcome to my MCP server on Render."
+
+    return {"result": f"Hello, {name}! Welcome to my MCP server on Render."}
 
 # Define a simple resource
 @mcp.resource("info://welcome")
@@ -33,7 +34,7 @@ async def mcp_endpoint(request: Request):
         body = await request.json()
         print(body)
         # Process the request through FastMCP
-        response = await mcp.call_tool(name = "greet", arguments="")
+        response = await mcp.call_tool(name = "greet")
        
         
         # Return JSON response

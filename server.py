@@ -14,8 +14,7 @@ mcp = FastMCP(
 @mcp.tool(name = "greet")
 def greet(name: str = "anshu") -> dict:  # Changed return type hint to dict
     """Greet a person by name"""
-
-    return {"result": f"Hello, {name}! Welcome to my MCP server on Render."}
+    return f"hello {name}"
 
 # Define a simple resource
 @mcp.resource("info://welcome")

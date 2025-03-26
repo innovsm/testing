@@ -12,7 +12,7 @@ mcp = FastMCP(
 
 # Define a simple tool
 @mcp.tool(name = "greet")
-def greet(name: str = "anshu") -> dict:  # Changed return type hint to dict
+def greet(name: str = "anshu") -> str:  # Changed return type hint to dict
     """Greet a person by name"""
     return f"hello {name}"
 
@@ -34,7 +34,7 @@ async def mcp_endpoint(request: Request):
 
         
         # Process the request through FastMCP
-        response = await mcp.call_tool(name = "greet" , arguments = "")
+        response = await mcp.call_tool(name = "greet",arguments={"name":"anshu"})
        
         
         # Convert TextContent to a serializable format

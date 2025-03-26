@@ -1,6 +1,7 @@
 from mcp.server.fastmcp import FastMCP
 from fastapi import FastAPI, Request, Response
 import json
+
 import os
 
 # Create MCP server instance
@@ -31,10 +32,10 @@ async def mcp_endpoint(request: Request):
     try:
         # Read raw JSON request
         body = await request.json()
-
+        tool_name = body.get("tool")
+        tool_args = body.get("args", {})  # Default to empty dict if args missing
         
-        # Process the request through FastMCP
-        response = await mcp.call_tool(name = "greet",arguments={"name":"anshu"})
+        response = await mcp.call_tool(name = tool_name,arguments= tool_args)
        
         
         # Convert TextContent to a serializable format

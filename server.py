@@ -1,7 +1,6 @@
 from mcp.server.fastmcp import FastMCP
 from fastapi import FastAPI, Request, Response
 import json
-import asyncio
 import os
 
 # Create MCP server instance
@@ -45,14 +44,6 @@ async def mcp_endpoint(request: Request):
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
-
-# Start the MCP server event loop
-async def start_mcp():
-    await mcp.start()
-
-@app.on_event("startup")
-async def startup_event():
-    asyncio.create_task(start_mcp())
 
 # Run the FastAPI app with Uvicorn
 if __name__ == "__main__":

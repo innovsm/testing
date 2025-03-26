@@ -34,7 +34,7 @@ async def mcp_endpoint(request: Request):
         body = await request.json()
         print(body)
         # Process the request through FastMCP
-        response = await mcp.call_tool(name = "greet")
+        response = await mcp.call_tool(name = "greet",arguments={"name":"anshu"})
        
         
         # Return JSON response

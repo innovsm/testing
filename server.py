@@ -1,155 +1,61 @@
 from mcp.server.fastmcp import FastMCP
-import requests
-import pandas as pd
-import base64
-from secrets_1 import get_user, get_github_token
-from typing import Any
+from fastapi import FastAPI, Request, Response
+import json
+import asyncio
+import os
 
-# =====================================================================
-# Configuration and Setup
-# =====================================================================
+# Create MCP server instance
+mcp = FastMCP(
+    "MyMCPDemo",
+    description="A simple MCP server demo for Claude Desktop",
+    version="1.0.0"
+)
 
-# Accessing user details
-GITHUB_TOKEN = get_github_token()  # Import the GitHub token
-USER = get_user()  # Import the username
-GITHUB_API_URL = "https://api.github.com"
+# Define a simple tool
+@mcp.tool()
+def greet(name: str) -> str:
+    """Greet a person by name"""
+    return f"Hello, {name}! Welcome to my MCP server on Render."
 
-# Create the MCP server
-mcp = FastMCP("testing", dependencies=["requests", "pandas"])
+# Define a simple resource
+@mcp.resource("info://welcome")
+def get_welcome() -> str:
+    """Get welcome message"""
+    return "Welcome to the MCP server hosted on Render!"
 
-HEADERS = {
-    "Authorization": f"Bearer {GITHUB_TOKEN}",
-    "Accept": "application/vnd.github.v3+json"
-}
+# Create FastAPI app
+app = FastAPI()
 
-# =====================================================================
-# MCP Tools (Functions)
-# =====================================================================
-
-@mcp.tool(name="user_details", description="Provides user information")
-def get_user_details(username: str) -> Any:
-    """
-    Fetches GitHub user details.
-    """
-    url = f"{GITHUB_API_URL}/users/{username}"
-    response = requests.get(url, headers=HEADERS)
-    if response.status_code != 200:
-        return {"error": "Failed to fetch user details"}
-    return response.json()
-
-
-@mcp.tool(name="repository_list", description="Fetches all repository metadata")
-def list_repositories() -> Any:
-    """
-    Fetches repository metadata and saves it locally as a CSV file.
-    """
-    url = f"{GITHUB_API_URL}/user/repos"
-    response = requests.get(url, headers=HEADERS)
+# HTTP endpoint to handle MCP messages
+@app.post("/mcp/message")
+async def mcp_endpoint(request: Request):
+    # Read raw JSON request
+    body = await request.json()
     
-    if response.status_code != 200:
-        return {"error": "Failed to fetch repositories"}
-
-    # Save repository data to CSV
-    data_frame = pd.DataFrame(response.json())
-    data_frame.to_csv("repo_list.csv", index=False)
+    # Process the request through FastMCP
+    response = await mcp.handle_message(body)
     
-    # Return repository names as JSON
-    return data_frame['name'].to_json()
+    # Return JSON response
+    return Response(
+        content=json.dumps(response),
+        media_type="application/json"
+    )
 
+# Health check endpoint for Render
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
 
-@mcp.tool(name="fetch_repo", description="Fetches repository content")
-def get_repo_data(repo_name: str) -> Any:
-    """
-    Fetches content of a specific repository.
-    """
-    url = f"{GITHUB_API_URL}/repos/{USER}/{repo_name}/contents"
-    response = requests.get(url, headers=HEADERS)
-    
-    if response.status_code != 200:
-        return {"error": "Failed to fetch repository content"}
-    
-    return response.json()
+# Start the MCP server event loop
+async def start_mcp():
+    await mcp.start()
 
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(start_mcp())
 
-@mcp.tool(name="download_data", description="Downloads specific content from a repository")
-def download_file(url: str) -> Any:
-    """
-    Downloads a file from a given URL.
-    """
-    response = requests.get(url, headers=HEADERS)
-    
-    if response.status_code != 200:
-        return {"error": "Failed to download file"}
-    
-    # Return file content (binary)
-    return response.content
-
-
-@mcp.tool(name="modify_upload", description="Modifies and uploads code to GitHub")
-def push_file_to_github(owner: str, repo: str, sha: str, path: str, code_content: str, commit_message: str) -> Any:
-    """
-    Modifies an existing file and uploads it to GitHub.
-    """
-    try:
-        # Encode content in Base64
-        content = base64.b64encode(code_content.encode('utf-8')).decode('utf-8')
-        
-        if not sha:
-            return {"error": "Failed to retrieve file SHA"}
-
-        # Create payload
-        data = {
-            "message": commit_message,
-            "content": content,
-            "sha": sha
-        }
-
-        # Push using API
-        url = f"{GITHUB_API_URL}/repos/{owner}/{repo}/contents/{path}"
-        headers = {"Authorization": f"Bearer {GITHUB_TOKEN}", "Accept": "application/vnd.github.v3+json"}
-
-        response = requests.put(url, json=data, headers=headers)
-
-        if response.status_code in [200, 201]:
-            return {"status": "Success"}
-        else:
-            return {"error": f"Failed with status code {response.status_code}"}
-    
-    except Exception as e:
-        return {"error": str(e)}
-
-
-@mcp.tool(name="fetch_public_repo", description="Fetches public repository data")
-def get_public_repo_data(repo_name: str) -> Any:
-    """
-    Fetches content of a public repository.
-    """
-    url = f"{GITHUB_API_URL}/repos/{repo_name}/contents"
-    response = requests.get(url, headers=HEADERS)
-    
-    if response.status_code != 200:
-        return {"error": "Failed to fetch public repository content"}
-    
-    return response.json()
-
-
-@mcp.tool(name="download_public_files", description="Downloads files from public repositories")
-def download_public_file(url: str) -> Any:
-    """
-    Downloads a file from a public repository URL.
-    """
-    response = requests.get(url, headers=HEADERS)
-    
-    if response.status_code != 200:
-        return {"error": "Failed to download public file"}
-    
-    # Return file content (binary)
-    return response.content
-
-
-# =====================================================================
-# Entry Point for Running the Server
-# =====================================================================
+# Run the FastAPI app with Uvicorn
 if __name__ == "__main__":
-    # Initialize and run the server using standard input/output transport
-    mcp.run(transport='sse')
+    port = int(os.environ.get("PORT", 8000))
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=port)

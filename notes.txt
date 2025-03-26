@@ -1,3 +1,157 @@
-there is limit of number of tokens claude can process
+from mcp.server.fastmcp import FastMCP
+import requests
+import pandas as pd
+import base64
+from secrets_1 import get_user, get_github_token
+from typing import Any
 
-# this system is unable to read write data currently , i am missing something
+# =====================================================================
+# Configuration and Setup
+# =====================================================================
+
+# Accessing user details
+GITHUB_TOKEN = get_github_token()  # Import the GitHub token
+USER = get_user()  # Import the username
+GITHUB_API_URL = "https://api.github.com"
+
+# Create the MCP server
+mcp = FastMCP("testing", dependencies=["requests", "pandas"])
+
+HEADERS = {
+    "Authorization": f"Bearer {GITHUB_TOKEN}",
+    "Accept": "application/vnd.github.v3+json"
+}
+
+# =====================================================================
+# MCP Tools (Functions)
+# =====================================================================
+
+@mcp.tool(name="user_details", description="Provides user information")
+def get_user_details(username: str) -> Any:
+    """
+    Fetches GitHub user details.
+    """
+    url = f"{GITHUB_API_URL}/users/{username}"
+    response = requests.get(url, headers=HEADERS)
+    if response.status_code != 200:
+        return {"error": "Failed to fetch user details"}
+    return response.json()
+
+
+@mcp.tool(name="repository_list", description="Fetches all repository metadata")
+def list_repositories() -> Any:
+    """
+    Fetches repository metadata and saves it locally as a CSV file.
+    """
+    url = f"{GITHUB_API_URL}/user/repos"
+    response = requests.get(url, headers=HEADERS)
+    
+    if response.status_code != 200:
+        return {"error": "Failed to fetch repositories"}
+
+    # Save repository data to CSV
+    data_frame = pd.DataFrame(response.json())
+    data_frame.to_csv("repo_list.csv", index=False)
+    
+    # Return repository names as JSON
+    return data_frame['name'].to_json()
+
+
+@mcp.tool(name="fetch_repo", description="Fetches repository content")
+def get_repo_data(repo_name: str) -> Any:
+    """
+    Fetches content of a specific repository.
+    """
+    url = f"{GITHUB_API_URL}/repos/{USER}/{repo_name}/contents"
+    response = requests.get(url, headers=HEADERS)
+    
+    if response.status_code != 200:
+        return {"error": "Failed to fetch repository content"}
+    
+    return response.json()
+
+
+@mcp.tool(name="download_data", description="Downloads specific content from a repository")
+def download_file(url: str) -> Any:
+    """
+    Downloads a file from a given URL.
+    """
+    response = requests.get(url, headers=HEADERS)
+    
+    if response.status_code != 200:
+        return {"error": "Failed to download file"}
+    
+    # Return file content (binary)
+    return response.content
+
+
+@mcp.tool(name="modify_upload", description="Modifies and uploads code to GitHub")
+def push_file_to_github(owner: str, repo: str, sha: str, path: str, code_content: str, commit_message: str) -> Any:
+    """
+    Modifies an existing file and uploads it to GitHub.
+    """
+    try:
+        # Encode content in Base64
+        content = base64.b64encode(code_content.encode('utf-8')).decode('utf-8')
+        
+        if not sha:
+            return {"error": "Failed to retrieve file SHA"}
+
+        # Create payload
+        data = {
+            "message": commit_message,
+            "content": content,
+            "sha": sha
+        }
+
+        # Push using API
+        url = f"{GITHUB_API_URL}/repos/{owner}/{repo}/contents/{path}"
+        headers = {"Authorization": f"Bearer {GITHUB_TOKEN}", "Accept": "application/vnd.github.v3+json"}
+
+        response = requests.put(url, json=data, headers=headers)
+
+        if response.status_code in [200, 201]:
+            return {"status": "Success"}
+        else:
+            return {"error": f"Failed with status code {response.status_code}"}
+    
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool(name="fetch_public_repo", description="Fetches public repository data")
+def get_public_repo_data(repo_name: str) -> Any:
+    """
+    Fetches content of a public repository.
+    """
+    url = f"{GITHUB_API_URL}/repos/{repo_name}/contents"
+    response = requests.get(url, headers=HEADERS)
+    
+    if response.status_code != 200:
+        return {"error": "Failed to fetch public repository content"}
+    
+    return response.json()
+
+
+@mcp.tool(name="download_public_files", description="Downloads files from public repositories")
+def download_public_file(url: str) -> Any:
+    """
+    Downloads a file from a public repository URL.
+    """
+    response = requests.get(url, headers=HEADERS)
+    
+    if response.status_code != 200:
+        return {"error": "Failed to download public file"}
+    
+    # Return file content (binary)
+    return response.content
+
+
+# =====================================================================
+# Entry Point for Running the Server
+# =====================================================================
+if __name__ == "__main__":
+    # Initialize and run the server using standard input/output transport
+    mcp.run(transport='sse')
+-----------------------------------------------------------------------------------------------------------
+

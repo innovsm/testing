@@ -39,6 +39,8 @@ async def mcp_endpoint(request: Request):
         
         # Convert TextContent to a serializable format
         return response
+    except Exception as e:
+        return e
 # Health check endpoint for Render
 @app.get("/health")
 async def health_check():

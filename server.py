@@ -1,10 +1,8 @@
 from mcp.server.fastmcp import FastMCP
 from fastapi import FastAPI, Request, Response
+import requests
 import json
-
 import os
-
-# Create MCP server instance
 mcp = FastMCP(
     "MyMCPDemo",
     description="A simple MCP server demo for Claude Desktop",
@@ -17,11 +15,17 @@ def greet(name: str = "anshu") -> str:  # Changed return type hint to dict
     """Greet a person by name"""
     return f"hello {name}"
 
+
+# addinng github functions 
+@mcp.tool(name="user_details", description="Provides user information")
+def get_user_details(GITHUB_API_URL: str, username: str,HEADERS):
+    url = f"{GITHUB_API_URL}/users/{username}"
+    response = requests.get(url, headers=HEADERS)
+    if response.status_code != 200:
+        return {"error": "Failed to fetch user details"}
+    return response.json()
 # Define a simple resource
-@mcp.resource("info://welcome")
-def get_welcome() -> str:
-    """Get welcome message"""
-    return "Welcome to the MCP server hosted on Render!"
+
 
 # Create FastAPI app
 app = FastAPI()

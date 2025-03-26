@@ -38,27 +38,7 @@ async def mcp_endpoint(request: Request):
        
         
         # Convert TextContent to a serializable format
-        if hasattr(response, 'text'):  # Check if it has a 'text' attribute
-            serializable_response = response.text
-        elif isinstance(response, dict):  # Already a dict
-            serializable_response = response
-        else:  # Fallback: convert to string
-            serializable_response = str(response)
-        
-       
-        
-        # Return JSON response
-        return Response(
-            content=json.dumps(serializable_response),
-            media_type="application/json"
-        )
-    except Exception as e:
-       
-        return Response(
-            content=json.dumps({"error": str(e)}),
-            media_type="application/json",
-            status_code=500
-        )
+        return response
 # Health check endpoint for Render
 @app.get("/health")
 async def health_check():

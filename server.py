@@ -28,18 +28,26 @@ app = FastAPI()
 # HTTP endpoint to handle MCP messages
 @app.post("/mcp/message")
 async def mcp_endpoint(request: Request):
-    # Read raw JSON request
-    body = await request.json()
-    print(body)
-    # Process the request through FastMCP
-    response = await mcp.call_tool(name = "greet")
-    
-    # Return JSON response
-    return Response(
-        content=json.dumps(response),
-        media_type="application/json"
-    )
-
+    try:
+        # Read raw JSON request
+        body = await request.json()
+        
+        # Process the request through FastMCP
+        response = await mcp.call_tool(body)
+       
+        
+        # Return JSON response
+        return Response(
+            content=json.dumps(response),
+            media_type="application/json"
+        )
+    except Exception as e:
+      
+        return Response(
+            content=json.dumps({"error": str(e)}),
+            media_type="application/json",
+            status_code=500
+        )
 # Health check endpoint for Render
 @app.get("/health")
 async def health_check():

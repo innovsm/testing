@@ -11,3 +11,9 @@ def calculate_bmi(weight_kg: float, height_m: float) -> float:
 
 
 # Run the MCP server
+
+if __name__ == "__main__":
+    mcp.run(host='0.0.0.0', port=8000)
+
+
+# The server will be running on http://localhost:8080/

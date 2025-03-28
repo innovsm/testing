@@ -1,12 +1,10 @@
 
 from mcp.server.fastmcp import FastMCP
-import requests
 from secrets_1 import get_github_token, get_user
+import requests
 import pandas as pd
 import base64
-
-# creating mcp server
-mcp = FastMCP("Github App")
+mcp = FastMCP("Github App",dependencies=["requests", "pandas"])  # dependcies is important
 
 GITHUB_API_URL = "https://api.github.com"
 GITHUB_TOKEN = get_github_token()
@@ -122,9 +120,13 @@ def download_file(url):
      if response.status_code!= 200:
          return "not worked"
      else:
-         # saving to local directory
-         return response.content
+         response.content
+         # saving to local director
+@mcp.tool(name = "add", description="it is used to download data from public repositories")
  
-if __name__ == "__main__":
-    mcp.run(transport="stdio")
+def download_file():
+    return "herllo world"
 
+
+if __name__ == "__main__":
+    mcp.run()

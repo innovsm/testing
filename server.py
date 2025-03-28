@@ -125,6 +125,5 @@ def download_file(url):
          # saving to local directory
          return response.content
  
-
-
-# The server will be running on http://localhost:8080/
+if __name__ == "__main__":
+    mcp.run(transport="stdio")

@@ -127,3 +127,5 @@ def download_file(url):
 def download_file():
     return "herllo world"
 
+if __name__ == "__main__":
+    mcp.run(transport = "stdio")

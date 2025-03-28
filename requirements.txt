@@ -1,7 +1,3 @@
-mcp
-fastapi
-fastmcp
-uvicorn
-requests
-httpx
 pandas
+mcp
+requests

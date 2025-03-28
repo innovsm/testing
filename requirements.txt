@@ -1,5 +1,6 @@
-mcp[cli]
+mcp
 fastapi
+fastmcp
 uvicorn
 requests
 httpx

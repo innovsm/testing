@@ -125,5 +125,6 @@ def download_file(url):
          # saving to local directory
          return response.content
  
-
+if __name__ == "__main__":
+    mcp.run()
 

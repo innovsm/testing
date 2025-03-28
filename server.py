@@ -126,5 +126,5 @@ def download_file(url):
          return response.content
  
 if __name__ == "__main__":
-    mcp.run()
+    mcp.run(transport="stdio")
 
